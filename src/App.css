@@ -44,7 +44,7 @@
 
 .status-bar,
 .room,
-.theme-dock {
+.theme-picker {
   position: relative;
   z-index: 1;
 }
@@ -148,8 +148,7 @@
   padding: 0;
 }
 
-.app.is-fullscreen .status-bar,
-.app.is-fullscreen .room,
+.app.is-fullscreen .status-controls,
 .app.is-fullscreen .theme-picker {
   display: none;
 }

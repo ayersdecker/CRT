@@ -433,8 +433,8 @@ function App() {
           <p className="eyebrow">Lofi player</p>
           <div className="player-frame">
             <iframe
-              src="https://www.youtube.com/embed/jfKfPfyJRdk"
-              title="Lofi Girl YouTube live stream"
+              src="https://www.youtube.com/embed/rFZHOHl-L8A"
+              title="Lofi Girl YouTube video"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen

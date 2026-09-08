@@ -170,6 +170,7 @@ function formatNow(date: Date) {
 
 function App() {
   const [themeId, setThemeId] = useState(() => localStorage.getItem('crt-theme') ?? themes[0].id)
+  const [safeMargin, setSafeMargin] = useState(() => Number(localStorage.getItem('crt-safe-margin')) || 48)
   const [now, setNow] = useState(() => new Date())
   const [weather, setWeather] = useState<WeatherState>(() =>
     geolocationSupported
@@ -204,6 +205,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem('crt-theme', activeTheme.id)
   }, [activeTheme.id])
+
+  useEffect(() => {
+    localStorage.setItem('crt-safe-margin', String(safeMargin))
+  }, [safeMargin])
 
   useEffect(() => {
     let cancelled = false
@@ -289,6 +294,7 @@ function App() {
     '--theme-accent': activeTheme.accent,
     '--theme-glow': activeTheme.glow,
     '--theme-gif': `url("${activeTheme.gif}")`,
+    '--safe-margin': `${safeMargin}px`,
   } as CSSProperties
 
   return (
@@ -297,7 +303,22 @@ function App() {
 
       <header className="status-bar">
         <p>CRT Retreat</p>
-        <span>{activeTheme.genre} mode</span>
+        <div className="status-controls">
+          <span>{activeTheme.genre} mode</span>
+          <label className="margin-control">
+            <span>Screen margin</span>
+            <input
+              type="range"
+              min="24"
+              max="120"
+              step="4"
+              value={safeMargin}
+              onChange={(event) => setSafeMargin(Number(event.target.value))}
+              aria-label="Screen margin"
+            />
+            <output>{safeMargin}px</output>
+          </label>
+        </div>
       </header>
 
       <section className="room">

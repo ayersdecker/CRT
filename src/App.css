@@ -2,9 +2,10 @@
   --theme-accent: #8df0ff;
   --theme-glow: rgba(141, 240, 255, 0.35);
   --theme-gif: none;
+  --safe-margin: 48px;
   position: relative;
   min-height: 100vh;
-  padding: 24px;
+  padding: var(--safe-margin);
   overflow: hidden;
 }
 
@@ -62,12 +63,40 @@
   box-shadow: 0 0 30px var(--theme-glow);
 }
 
-.status-bar p,
-.status-bar span {
+.status-bar > p,
+.status-bar > span {
   margin: 0;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-size: 0.76rem;
+}
+
+.status-controls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.margin-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(229, 232, 255, 0.76);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.margin-control input {
+  width: 96px;
+  accent-color: var(--theme-accent);
+}
+
+.margin-control output {
+  min-width: 3.5ch;
+  color: var(--theme-accent);
+  text-align: right;
 }
 
 .room {
@@ -300,13 +329,26 @@
 
 @media (max-width: 640px) {
   .app {
-    padding: 16px;
+    padding: max(16px, var(--safe-margin));
   }
 
   .status-bar {
     border-radius: 24px;
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .status-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .margin-control {
+    width: 100%;
+  }
+
+  .margin-control input {
+    flex: 1;
   }
 
   .theme-dock {

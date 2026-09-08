@@ -20,6 +20,13 @@ type WeatherState = {
   windSpeed: string
 }
 
+type StockState = {
+  status: 'loading' | 'ready' | 'error'
+  symbol: string
+  price: string
+  change: string
+}
+
 const themes: Theme[] = [
   {
     id: 'lofi-rain',
@@ -178,6 +185,12 @@ const minSafeMargin = 24
 const maxSafeMargin = 120
 const safeMarginStep = 4
 
+const headlines = [
+  'World headlines · Click to open CNN',
+  'Markets and culture · Live in a new tab',
+  'The latest from around the world · Click to read',
+]
+
 function formatNow(date: Date) {
   return {
     time: new Intl.DateTimeFormat([], {
@@ -198,6 +211,12 @@ function App() {
   const [safeMargin, setSafeMargin] = useState(() => Number(localStorage.getItem('crt-safe-margin')) || 48)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [now, setNow] = useState(() => new Date())
+  const [stock, setStock] = useState<StockState>({
+    status: 'loading',
+    symbol: 'SPY',
+    price: '--',
+    change: '--',
+  })
   const [weather, setWeather] = useState<WeatherState>(() =>
     geolocationSupported
       ? {
@@ -234,6 +253,49 @@ function App() {
   useEffect(() => {
     localStorage.setItem('crt-safe-margin', String(safeMargin))
   }, [safeMargin])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadStock = async () => {
+      try {
+        const response = await fetch(
+          'https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1d',
+        )
+        if (!response.ok) {
+          throw new Error('Stock lookup failed.')
+        }
+
+        const data = (await response.json()) as {
+          chart?: { result?: Array<{ meta?: { regularMarketPrice?: number; chartPreviousClose?: number } }> }
+        }
+        const meta = data.chart?.result?.[0]?.meta
+        if (typeof meta?.regularMarketPrice !== 'number') {
+          throw new Error('Stock price unavailable.')
+        }
+
+        const previousClose = meta.chartPreviousClose ?? meta.regularMarketPrice
+        const change = meta.regularMarketPrice - previousClose
+        if (!cancelled) {
+          setStock({
+            status: 'ready',
+            symbol: 'SPY',
+            price: `$${meta.regularMarketPrice.toFixed(2)}`,
+            change: `${change >= 0 ? '+' : ''}${change.toFixed(2)}`,
+          })
+        }
+      } catch {
+        if (!cancelled) {
+          setStock((current) => ({ ...current, status: 'error' }))
+        }
+      }
+    }
+
+    void loadStock()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const updateFullscreenState = () => {
@@ -407,6 +469,17 @@ function App() {
           {weather.status === 'loading' ? (
             <p className="supporting-copy">Checking your browser location…</p>
           ) : null}
+
+          <div className="stock-module">
+            <p className="eyebrow">Market watch</p>
+            <div className="stock-readout">
+              <strong>{stock.symbol}</strong>
+              <span>{stock.price}</span>
+            </div>
+            <p className={stock.change.startsWith('-') ? 'stock-change down' : 'stock-change'}>
+              {stock.status === 'loading' ? 'Loading quote…' : stock.status === 'error' ? 'Quote unavailable' : `${stock.change} today`}
+            </p>
+          </div>
         </aside>
 
         <section className="hero-panel">
@@ -414,17 +487,16 @@ function App() {
           <p className="hero-copy">{activeTheme.blurb}</p>
 
           <a
-            className="letter-link"
+            className="news-ticker"
             href="https://www.cnn.com/world"
             target="_blank"
             rel="noreferrer"
+            aria-label="Open CNN World headlines"
           >
-            <span className="letter-icon" aria-hidden="true">
-              ✉
-            </span>
-            <span>
-              <strong>Open the world news letter</strong>
-              <small>CNN World in a new tab</small>
+            <span className="news-ticker-track">
+              {[...headlines, ...headlines].map((headline, index) => (
+                <span key={`${headline}-${index}`}>{headline}</span>
+              ))}
             </span>
           </a>
         </section>

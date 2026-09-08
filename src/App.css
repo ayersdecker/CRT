@@ -145,7 +145,7 @@
 }
 
 .app:fullscreen {
-  padding: 0;
+  padding: 24px var(--safe-margin);
 }
 
 .app.is-fullscreen .status-controls,
@@ -184,7 +184,7 @@
 
 .supporting-copy,
 .hero-copy,
-.letter-link small {
+.news-ticker small {
   color: rgba(229, 232, 255, 0.82);
 }
 
@@ -204,8 +204,7 @@
 
 .weather-readout strong,
 .weather-readout span,
-.message-card p,
-.letter-link strong {
+.news-ticker strong {
   color: #f8fbff;
 }
 
@@ -227,49 +226,79 @@
   font-size: 1.02rem;
 }
 
-.letter-link {
+.news-ticker {
+  overflow: hidden;
   margin-top: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  width: fit-content;
-  padding: 16px 18px;
-  border-radius: 20px;
-  color: inherit;
+  display: block;
+  width: min(100%, 34rem);
+  padding: 10px 0;
+  color: #f8fbff;
   text-decoration: none;
-  background: rgba(5, 9, 18, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+  border-top: 1px solid var(--theme-accent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(3, 6, 13, 0.66);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
 }
 
-.letter-link:hover,
-.letter-link:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 0 24px var(--theme-glow);
+.news-ticker:hover,
+.news-ticker:focus-visible {
   border-color: var(--theme-accent);
+  box-shadow: 0 0 18px var(--theme-glow);
 }
 
-.letter-link span {
+.news-ticker-track {
   display: flex;
-  flex-direction: column;
+  width: max-content;
+  animation: headline-scroll 28s linear infinite;
 }
 
-.letter-icon {
-  display: inline-flex;
-  place-items: center;
-  width: 2.6rem;
-  height: 2.6rem;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  font-size: 1.4rem;
+.news-ticker-track span {
+  padding-right: 3rem;
+  white-space: nowrap;
+}
+
+@keyframes headline-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .player-panel {
   display: flex;
   flex-direction: column;
+}
+
+.stock-module {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.stock-readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stock-readout span {
+  color: #f8fbff;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.stock-change {
+  margin-top: 4px;
+  color: #9ee6b3;
+  font-size: 0.86rem;
+}
+
+.stock-change.down {
+  color: #ffaaa8;
 }
 
 .player-frame {

@@ -111,16 +111,42 @@ const themes: Theme[] = [
     glow: 'rgba(251, 113, 133, 0.35)',
     blurb: 'A soft dawn palette with enough motion to keep the set feeling alive.',
   },
-]
-
-const dailyMessages = [
-  'Small progress is still progress. Let the room do the heavy lifting.',
-  'Keep something cozy nearby and give yourself enough time to wander.',
-  'Tonight is for low pressure and clear momentum.',
-  'A good dashboard should feel like a place, not a page.',
-  'Let the static settle, then make the next simple move.',
-  'Stay soft, stay curious, keep building.',
-  'The best routines are the ones you actually want to return to.',
+  {
+    id: 'medieval-castle',
+    name: 'Medieval Castle',
+    genre: 'Dark Folklore',
+    gif: 'https://images.unsplash.com/photo-1520637836862-4d197d17c50a?auto=format&fit=crop&w=1800&q=85',
+    accent: '#e7c27d',
+    glow: 'rgba(231, 194, 125, 0.3)',
+    blurb: 'Stone walls, candlelight, and a quiet watch over the hills.',
+  },
+  {
+    id: 'forest-rain',
+    name: 'Forest Rain',
+    genre: 'Rainy Ambient',
+    gif: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1800&q=85',
+    accent: '#a8d5ba',
+    glow: 'rgba(168, 213, 186, 0.3)',
+    blurb: 'Wet leaves, deep green silence, and rain threading through the canopy.',
+  },
+  {
+    id: 'woodland-cabin',
+    name: 'Woodland Cabin',
+    genre: 'Fireside Folk',
+    gif: 'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1800&q=85',
+    accent: '#f1b36a',
+    glow: 'rgba(241, 179, 106, 0.3)',
+    blurb: 'A warm lamp, old timber, and nowhere else you need to be tonight.',
+  },
+  {
+    id: 'cozy-reading-room',
+    name: 'Cozy Reading Room',
+    genre: 'Quiet Evening',
+    gif: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1800&q=85',
+    accent: '#f3c892',
+    glow: 'rgba(243, 200, 146, 0.3)',
+    blurb: 'Soft lamplight and a well-loved room for slow pages and softer hours.',
+  },
 ]
 
 const weatherCodeMap: Record<number, string> = {
@@ -148,11 +174,9 @@ const weatherCodeMap: Record<number, string> = {
 const geolocationSupported =
   typeof navigator !== 'undefined' && 'geolocation' in navigator
 
-function getDailyMessageIndex(date: Date) {
-  const yearStart = new Date(date.getFullYear(), 0, 0)
-  const dayOfYear = Math.floor((date.getTime() - yearStart.getTime()) / 86_400_000)
-  return dayOfYear % dailyMessages.length
-}
+const minSafeMargin = 24
+const maxSafeMargin = 120
+const safeMarginStep = 4
 
 function formatNow(date: Date) {
   return {
@@ -195,7 +219,6 @@ function App() {
     [themeId],
   )
   const today = formatNow(now)
-  const dailyMessage = dailyMessages[getDailyMessageIndex(now)]
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000)
@@ -218,25 +241,18 @@ function App() {
         const weatherResponse = await fetch(
           `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`,
         )
-        const reverseResponse = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&count=1&language=en&format=json`,
-        )
 
-        if (!weatherResponse.ok || !reverseResponse.ok) {
+        if (!weatherResponse.ok) {
           throw new Error('Weather lookup failed.')
         }
 
         const weatherData = await weatherResponse.json()
-        const reverseData = await reverseResponse.json()
-        const result = reverseData.results?.[0]
         const weatherCode = weatherData.current?.weather_code as number | undefined
 
         if (!cancelled) {
           setWeather({
             status: 'ready',
-            location: result
-              ? `${result.name}${result.admin1 ? `, ${result.admin1}` : ''}`
-              : 'Your area',
+            location: 'Nearby',
             temperature:
               typeof weatherData.current?.temperature_2m === 'number'
                 ? `${Math.round(weatherData.current.temperature_2m)}°${weatherData.current_units?.temperature_2m ?? 'C'}`
@@ -304,25 +320,33 @@ function App() {
       <header className="status-bar">
         <p>CRT Retreat</p>
         <div className="status-controls">
-          <span>{activeTheme.genre} mode</span>
           <label className="margin-control">
             <span>Screen margin</span>
-            <input
-              type="range"
-              min="24"
-              max="120"
-              step="4"
-              value={safeMargin}
-              onChange={(event) => setSafeMargin(Number(event.target.value))}
-              aria-label="Screen margin"
-            />
+            <span className="margin-stepper">
+              <button
+                type="button"
+                onClick={() => setSafeMargin((margin) => Math.max(minSafeMargin, margin - safeMarginStep))}
+                disabled={safeMargin <= minSafeMargin}
+                aria-label="Decrease screen margin"
+              >
+                −
+              </button>
             <output>{safeMargin}px</output>
+              <button
+                type="button"
+                onClick={() => setSafeMargin((margin) => Math.min(maxSafeMargin, margin + safeMarginStep))}
+                disabled={safeMargin >= maxSafeMargin}
+                aria-label="Increase screen margin"
+              >
+                +
+              </button>
+            </span>
           </label>
         </div>
       </header>
 
       <section className="room">
-        <aside className="panel info-panel">
+        <aside className="info-panel">
           <p className="eyebrow">Local time</p>
           <h1>{today.time}</h1>
           <p className="supporting-copy">{today.date}</p>
@@ -341,15 +365,9 @@ function App() {
           ) : null}
         </aside>
 
-        <section className="panel hero-panel">
-          <p className="eyebrow">Theme {themes.findIndex((theme) => theme.id === activeTheme.id) + 1} of {themes.length}</p>
-          <h2>{activeTheme.name}</h2>
+        <section className="hero-panel">
+          <p className="eyebrow">{activeTheme.genre}</p>
           <p className="hero-copy">{activeTheme.blurb}</p>
-
-          <div className="message-card">
-            <span className="message-label">Daily message</span>
-            <p>{dailyMessage}</p>
-          </div>
 
           <a
             className="letter-link"
@@ -367,12 +385,12 @@ function App() {
           </a>
         </section>
 
-        <aside className="panel player-panel">
+        <aside className="player-panel">
           <p className="eyebrow">Lofi player</p>
           <div className="player-frame">
             <iframe
-              src="https://www.youtube.com/embed/jfKfPfyJRdk?si=4eP8ruFrJ1RBr6Cx"
-              title="Lofi music player"
+              src="https://www.youtube.com/embed/jfKfPfyJRdk"
+              title="Lofi Girl YouTube live stream"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen

@@ -5,7 +5,7 @@
   --safe-margin: 48px;
   position: relative;
   min-height: 100vh;
-  padding: var(--safe-margin);
+  padding: 24px var(--safe-margin);
   overflow: hidden;
 }
 
@@ -88,9 +88,34 @@
   white-space: nowrap;
 }
 
-.margin-control input {
-  width: 96px;
-  accent-color: var(--theme-accent);
+.margin-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.margin-stepper button {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  color: var(--theme-accent);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+.margin-stepper button:hover:not(:disabled),
+.margin-stepper button:focus-visible {
+  border-color: var(--theme-accent);
+  box-shadow: 0 0 12px var(--theme-glow);
+}
+
+.margin-stepper button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .margin-control output {
@@ -101,20 +126,15 @@
 
 .room {
   display: grid;
-  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.35fr) minmax(260px, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.6fr) minmax(240px, 0.9fr);
+  gap: 28px;
 }
 
-.panel {
-  min-height: 100%;
-  padding: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 28px;
-  background: rgba(5, 9, 18, 0.72);
-  backdrop-filter: blur(14px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 18px 60px rgba(0, 0, 0, 0.35);
+.info-panel,
+.player-panel {
+  align-self: center;
+  padding: 12px;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
 }
 
 .eyebrow {
@@ -125,8 +145,7 @@
   font-size: 0.72rem;
 }
 
-.info-panel h1,
-.hero-panel h2 {
+.info-panel h1 {
   margin: 0;
 }
 
@@ -134,13 +153,8 @@
   font-size: clamp(2.6rem, 5vw, 4.4rem);
 }
 
-.hero-panel h2 {
-  font-size: clamp(2.1rem, 4.5vw, 3.5rem);
-}
-
 .supporting-copy,
 .hero-copy,
-.message-card p,
 .letter-link small {
   color: rgba(229, 232, 255, 0.82);
 }
@@ -173,34 +187,15 @@
 .hero-panel {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   min-height: 420px;
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.52)),
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.06), transparent 60%),
-    var(--theme-gif) center / cover no-repeat;
+  padding: 32px clamp(12px, 4vw, 56px);
+  text-shadow: 0 2px 22px rgba(0, 0, 0, 0.95);
 }
 
 .hero-copy {
   max-width: 32rem;
   font-size: 1.02rem;
-}
-
-.message-card {
-  margin-top: 28px;
-  padding: 18px;
-  border-radius: 20px;
-  background: rgba(5, 9, 18, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.message-label {
-  display: inline-block;
-  margin-bottom: 8px;
-  color: var(--theme-accent);
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
 }
 
 .letter-link {
@@ -271,15 +266,15 @@
 
 .theme-card {
   position: relative;
-  padding: 18px 16px;
-  min-height: 120px;
+  padding: 14px;
+  min-height: 92px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   text-align: left;
   color: #f8fbff;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 22px;
+  border-radius: 12px;
   background:
     linear-gradient(180deg, transparent, rgba(5, 9, 18, 0.92)),
     var(--card-gif) center / cover no-repeat;
@@ -329,7 +324,7 @@
 
 @media (max-width: 640px) {
   .app {
-    padding: max(16px, var(--safe-margin));
+    padding: 16px var(--safe-margin);
   }
 
   .status-bar {
@@ -345,10 +340,6 @@
 
   .margin-control {
     width: 100%;
-  }
-
-  .margin-control input {
-    flex: 1;
   }
 
   .theme-dock {

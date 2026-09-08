@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import './App.css'
 
@@ -193,8 +193,10 @@ function formatNow(date: Date) {
 }
 
 function App() {
+  const appRef = useRef<HTMLElement>(null)
   const [themeId, setThemeId] = useState(() => localStorage.getItem('crt-theme') ?? themes[0].id)
   const [safeMargin, setSafeMargin] = useState(() => Number(localStorage.getItem('crt-safe-margin')) || 48)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [now, setNow] = useState(() => new Date())
   const [weather, setWeather] = useState<WeatherState>(() =>
     geolocationSupported
@@ -234,12 +236,30 @@ function App() {
   }, [safeMargin])
 
   useEffect(() => {
+    const updateFullscreenState = () => {
+      setIsFullscreen(document.fullscreenElement === appRef.current)
+    }
+
+    document.addEventListener('fullscreenchange', updateFullscreenState)
+    return () => document.removeEventListener('fullscreenchange', updateFullscreenState)
+  }, [])
+
+  const toggleFullscreen = async () => {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen()
+      return
+    }
+
+    await appRef.current?.requestFullscreen()
+  }
+
+  useEffect(() => {
     let cancelled = false
 
     const loadWeather = async (latitude: number, longitude: number) => {
       try {
         const weatherResponse = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`,
+          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`,
         )
 
         if (!weatherResponse.ok) {
@@ -247,20 +267,35 @@ function App() {
         }
 
         const weatherData = await weatherResponse.json()
+        let location = 'Nearby'
+
+        try {
+          const locationResponse = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
+          )
+          const locationData = (await locationResponse.json()) as {
+            city?: string
+            locality?: string
+          }
+          location = locationData.city ?? locationData.locality ?? location
+        } catch {
+          // Weather remains useful even if the town lookup is unavailable.
+        }
+
         const weatherCode = weatherData.current?.weather_code as number | undefined
 
         if (!cancelled) {
           setWeather({
             status: 'ready',
-            location: 'Nearby',
+            location,
             temperature:
               typeof weatherData.current?.temperature_2m === 'number'
-                ? `${Math.round(weatherData.current.temperature_2m)}°${weatherData.current_units?.temperature_2m ?? 'C'}`
+                ? `${Math.round(weatherData.current.temperature_2m)}°${weatherData.current_units?.temperature_2m ?? 'F'}`
                 : '--',
             description: weatherCodeMap[weatherCode ?? -1] ?? 'Current conditions',
             windSpeed:
               typeof weatherData.current?.wind_speed_10m === 'number'
-                ? `${Math.round(weatherData.current.wind_speed_10m)} ${weatherData.current_units?.wind_speed_10m ?? 'km/h'}`
+                ? `${Math.round(weatherData.current.wind_speed_10m)} ${weatherData.current_units?.wind_speed_10m ?? 'mph'}`
                 : '--',
           })
         }
@@ -314,7 +349,7 @@ function App() {
   } as CSSProperties
 
   return (
-    <main className="app" style={themeStyle}>
+    <main ref={appRef} className={isFullscreen ? 'app is-fullscreen' : 'app'} style={themeStyle}>
       <div className="scanlines" aria-hidden="true" />
 
       <header className="status-bar">
@@ -342,6 +377,15 @@ function App() {
               </button>
             </span>
           </label>
+          <button
+            className="fullscreen-toggle"
+            type="button"
+            onClick={() => void toggleFullscreen()}
+            aria-label="Enter fullscreen theme view"
+            title="Fullscreen theme view"
+          >
+            ⛶
+          </button>
         </div>
       </header>
 
@@ -400,20 +444,19 @@ function App() {
         </aside>
       </section>
 
-      <section className="theme-dock" aria-label="Theme selector">
-        {themes.map((theme) => (
-          <button
-            key={theme.id}
-            type="button"
-            className={theme.id === activeTheme.id ? 'theme-card active' : 'theme-card'}
-            onClick={() => setThemeId(theme.id)}
-            aria-pressed={theme.id === activeTheme.id}
-            style={{ '--card-gif': `url("${theme.gif}")` } as CSSProperties}
-          >
-            <span>{theme.name}</span>
-            <small>{theme.genre}</small>
-          </button>
-        ))}
+      <section className="theme-picker" aria-label="Theme selector">
+        <label htmlFor="theme-select">Atmosphere</label>
+        <select
+          id="theme-select"
+          value={activeTheme.id}
+          onChange={(event) => setThemeId(event.target.value)}
+        >
+          {themes.map((theme) => (
+            <option key={theme.id} value={theme.id}>
+              {theme.name} · {theme.genre}
+            </option>
+          ))}
+        </select>
       </section>
     </main>
   )
